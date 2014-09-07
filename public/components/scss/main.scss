@@ -1,0 +1,275 @@
+@import "bourbon/bourbon";
+@import "base/base";
+@import "neat/neat";
+@import "font-awesome/font-awesome";
+
+
+
+div.container{
+    @include outer-container;
+}
+ul.menu {
+    &:hover {
+        cursor: pointer;
+        cursor: hand;
+    }
+    @include span-columns(12);
+    background: $lighter;
+    @include padding(4px);
+    margin-bottom: 10px;
+    li {
+        @include span-columns(4 of 12);
+        font-family: $header-font-family;
+        line-height: $header-line-height;
+        text-rendering: optimizeLegibility;
+        font-size: $base-font-size * 1.75;
+        text-align: center;
+        color: $dark;
+        font-weight: 700;
+        //@include pad(0 4px 0 4px);
+    }
+    li:hover {
+        @include transition(all .5s ease-in-out);
+        color: #33cdc7;
+    }
+}
+div.infobox {
+    @include span-columns(12);
+    h1{
+        @include span-columns(12 of 12);
+        @include pad(4px);
+        @include margin(4px);
+    }
+    ul{
+        @include span-columns(12 of 12);
+        text-align: center;
+        @include margin(0 0 4px 0);
+        font-size: $base-font-size * 1.3;
+        font-weight: 700;
+    }
+    li{
+        @include span-columns(4 of 12);
+        background: $lighter;
+        border-radius: 5px;
+        @include pad(4px);
+    }
+    
+}
+div.profile {
+    @include pad(10px);
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    @include span-columns(12 of 12);
+    form {
+        @include span-columns(12 of 12);
+        .info {
+            @include span-columns(6 of 12);
+            
+        }
+        .dropdown {
+            @include span-columns(4 of 12);
+            height: 37px;
+            border-radius: 0.1875em;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+            background: lighten($lighter, 10%);
+            margin-top: 10px;
+            
+        }
+        .plus:before {
+            @include span-columns(3 of 12);
+            content: '\f0fe';
+            font-family: FontAwesome;
+            font-style: normal;
+            font-weight: normal;
+            text-decoration: none;
+            text-align: center;
+            @include pad(auto);
+            color: black;
+            font-size: 1.5em;
+            float: left;
+            display: inline;
+            margin-top: 12px;
+            margin-left: 2px;
+        }
+        .plus {
+            cursor: pointer;
+            cursor: hand;
+        }
+        .fulldrop {
+            @extend .dropdown;
+            @include span-columns(8 of 12);
+        }
+        
+    }
+}
+h3 {
+    margin-bottom: 4px;
+    margin-top: 4px;
+}
+.selected {
+    @include span-columns(6 of 12);
+    border-top-style: dashed;
+    text-align: center;
+    @include pad(15px 5px 5px 5px);
+    .known {
+        @include span-columns(4 of 12);
+    }
+    .years {
+        @extend .known;
+    }
+    .minus:before {
+        @include span-columns(3 of 12);
+        content: '\f146';
+        font-family: FontAwesome;
+        font-style: normal;
+        font-weight: normal;
+        text-decoration: none;
+        text-align: center;
+        //@include pad(auto);
+        color: black;
+        font-size: 1em;
+        float: left;
+        display: inline;
+        margin-left: 2px;
+    }
+    .minus:hover {
+        cursor: pointer;
+        cursor: hand;
+    }
+    .tolearn {
+        @include span-columns(8 of 12);
+    }
+}
+.skypeInfo {
+    @include span-columns(12 of 12);
+    float: right;
+    div.putter {
+        font-size: 2em;
+        margin-left: 20px;
+        @include span-columns(6 of 12);
+        clear: none;
+        display: inline;
+        @include pad(5px);
+        &:hover {
+            cursor: pointer;
+            cursor: hand;
+        }
+    }
+}
+
+
+#editor {
+    @include span-columns(12 of 12);
+    display: none;
+}
+.name, .knowit, .learning {
+    @extend h3;
+    @include span-columns(3 of 12);
+    display: inline;
+    float: left;
+    
+    li {
+        float: right;
+        @include span-columns(12 of 12);
+    }
+}
+.name:before {
+    content: "Name: ";
+}
+.knowit:before {
+    content: "Known: ";
+}
+.learning:before {
+    content: "Learning: ";
+}
+.progres {
+  @include span-columns(3 of 12);
+  @include pad(4px);
+  //margin: 0 auto 0 auto;
+  text-align:center;
+  &:before {
+  }
+}
+.progress {
+   @extend .progres;
+   @include span-columns(12 of 12);
+   height: 40px;
+   background: whitesmoke;
+   border-radius: 4px;
+}
+.meter {
+    background: blue;
+    @include pad(2px);
+    padding-bottom: 3px;
+    height: 34px;
+    float: left;
+    margin: 0 auto 0 auto;
+    border-radius: 4px;
+}
+spacer {
+    clear: both;
+    width: 100%;
+    height: 4px;
+}
+.user {
+    @include span-columns(11 of 12);
+    background: $lighter;
+    border: solid $dark;
+    border-radius: 4px;
+}
+.finder, .shell, .person {
+    @include span-columns(12 of 12);
+    .daName {
+        clear: none;
+        display: inline;
+        float: left;
+        @include span-columns(3 of 12);
+    }
+    .someSpace {
+        @include span-columns(8 of 12);
+    }
+    .addFriend {
+        @include span-columns(2 of 12);
+        float: left;
+        background: whitesmoke;
+        border: solid 1px;
+        border-color: $dark;
+        @include pad(4px);
+        border-radius: 4px;
+        text-align: center;
+        clear: right;
+        &:hover {
+            cursor: pointer;
+            cursor: hand;
+            @include transition(all .5s ease-in-out);
+            color: #33cdc7; 
+            background: $dark;
+        }
+    }
+    .langKnow, .levelKnow, .langLearn, .levelLearn {
+        display: inline;
+        clear: none;
+        @include span-columns(3 of 12);
+    }
+    .first, .second, .third, .fourth {
+        @include span-columns(3 of 12);
+    }
+}
+.person {
+    @include pad(5px);
+    margin-top: 10px;
+    border: solid 1px;
+    border-color: $dark;
+    background: $lighter;
+}
+.noClear {
+    clear: none;
+    display: inline;
+}
+.skypeIcon {
+    height: 1em;
+    width: 1em;
+    @include pad(4px 3px 0 4px);
+    margin-top: 4px;
+}

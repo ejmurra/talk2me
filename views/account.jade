@@ -1,0 +1,14 @@
+p ID: #{user.id} 
+p Gender: #{user.gender}
+p Name: #{user.displayName}
+
+form(name="updateSetting", action="/updateSettings", method="post")
+    input(type="text", name="language[]")
+    br
+    input(type="text", name="language[]")
+    br
+    input(type="text", name="language[]")
+    br
+    input(type="text", name="language[]")
+    br
+    input(type="submit", value="submit")

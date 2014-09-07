@@ -1,0 +1,14 @@
+{
+  "name": "flang",
+  "version": "0.0.0",
+  "dependencies": {
+    "express": "*",
+    "body-parser" : "*",
+    "http" : "*",
+    "path" : "*",
+    "jade": "*",
+    "passport": "*",
+    "pg": "*",
+    "passport-facebook": "*"
+  }
+}
