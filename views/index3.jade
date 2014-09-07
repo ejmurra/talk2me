@@ -1,0 +1,124 @@
+doctype html
+html
+  head
+    title Talk 2 Me
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel='stylesheet', type='text/css', href='css/main.css')
+    link(href='http://fonts.googleapis.com/css?family=Roboto:400,700,400italic|Quattrocento:400,700', rel='stylesheet', type='text/css')
+    script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+  body
+    ul.menu
+      li.infobox Home
+      li#swapover.profile Profile
+      li.finder Find a partner
+    .container
+      #infobox.infobox
+        h1 Why should you use our shit?
+        ul Here&apos;s why:
+        li You like bad bitches, it&apos;s a fucking problem
+        li Luckily, we know how to solve a fucking problem
+        li And plus... some other shit
+      .profile
+        .spacer &nbsp;
+        if !authenticated
+          a(href='/auth/facebook')
+            img(src='login-with-facebook.png', width='154', height='22')
+        else
+          #user.user
+            h1.noClear Your profile
+            #skype.skypeInfo
+              a(href="skype:#{screename}?call")
+                .putter
+                  img.skypeIcon(src='skype.png') 
+                  | #{screename}
+            #profiler.profiler
+              ul.name
+                li #{name}
+              ul.knowit
+                li #{known_langs}
+              ul.learning
+                li #{unknown_langs}
+            ul.progres
+              h3 Learning level
+              li.progress
+                span.meter(style='width: 60%') &nbsp;
+          #editor
+            form
+              div.info
+                h3 Known languages:
+                select#language_known.dropdown
+                  option
+                  each val in language_data
+                    option(id= val.id) #{val.name} 
+                select#fluency_known.dropdown
+                  option
+                  each val in fluency_data
+                    option(id= val.id) #{val.name}
+                span#add1.plus &nbsp;
+              .info
+                h3 Want to learn:
+                select#language_learn.dropdown
+                  option
+                  each val in language_data
+                    option(id= val.id) #{val.name} 
+                select#fluency_learn.dropdown
+                  option
+                  each val in fluency_data
+                    option(id= val.id) #{val.name}
+                span#add2.plus &nbsp;
+            #selectL.selected
+              each lang_entry in languages
+                if lang_entry.known
+                  div
+                    span(id= lang_entry.language_id).known #{lang_entry.language_name}
+                    span(id= lang_entry.fluency).years #{lang_entry.fluency_name}
+                    div#pull1
+                      span.minus
+            #selectR.selected
+              each lang_entry in languages
+                if !lang_entry.known
+                  div
+                    span(id= lang_entry.language_id).known #{lang_entry.language_name}
+                    span(id= lang_entry.fluency_id).years #{lang_entry.fluency_name}
+                    div#pull2
+                      span.minus
+      .finder
+        .shell
+          ul.person
+            h1.daName Jack
+            .addFriend Add Friend
+            .someSpace &nbsp;
+            ul
+              ul.first
+                h3 Knows
+                li.langKnow spanlish
+              ul.second
+                h3 Level
+                li.levelKnow expert
+            ul
+              ul.third
+                h3 Learning
+                li.langLearn Portueguese
+              ul.fourth
+                h3 Level
+                li.levelLearn Beginner
+          ul.person
+            h1.daName Jack
+            .addFriend Add Friend
+            .someSpace &nbsp;
+            ul
+              ul.first
+                h3 Knows
+                li.langKnow spanlish
+              ul.second
+                h3 Level
+                li.levelKnow expert
+            ul
+              ul.third
+                h3 Learning
+                li.langLearn Portueguese
+              ul.fourth
+                h3 Level
+                li.levelLearn Beginner
+    script(src='js/main.js')

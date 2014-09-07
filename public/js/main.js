@@ -5,11 +5,6 @@ $( document ).ready(function() {
         $('.container>.'+ menu.target.classList[0]).show().siblings().hide();
     });
 
-/*    $('#edit').on('click',function(edit){
-        $('#editor').toggle(); 
-    });
-    */
-
     $('#add1').on('click',function(jax){
         var lang_name = $('.dropdown#language_known option:selected').text(),
             fluency_name = $('.dropdown#fluency_known option:selected').text();

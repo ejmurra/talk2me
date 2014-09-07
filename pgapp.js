@@ -35,6 +35,7 @@ console.log("Url: " + url);
 
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         return console.error('could not connect to postgres', err);
     }
     client.query('SELECT NOW() as time', function (err, result){
@@ -62,12 +63,11 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new FacebookStrategy({
     clientID: FACEBOOK_APP_ID,
     clientSecret: FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/callback",
+    callbackURL: "http://35.2.123.66:3000/auth/facebook/callback",
     profileFields: ['id', 'displayName', 'photos']
 },
 function(accessToken, refreshToken, profile, done) {
     process.nextTick(function () {
-        console.log("Tick");
         return done(null, profile['_json']);
     });
 }));
@@ -87,6 +87,7 @@ app.get('/', function(req, res){
     console.log(req.user);
     var data = {authenticated: req.isAuthenticated()};
     if(data['authenticated']){
+        console.log("Calling from root");
         getUserData(req.user.user_id, false, function (data) {
             data['authenticated'] = true;
             getLanguageAndFluencyData(function(response){
@@ -95,12 +96,23 @@ app.get('/', function(req, res){
                 }else{
                     data['language_data'] = response.language_data;
                     data['fluency_data'] = response.fluency_data;
-                    console.log(data);
-                    res.render('index', data);
+
+                    friendSuggestions(req.user.user_id, function(response){
+                        if(response == 500){
+                            res.send(response);
+                        }else{
+                            data['friend_suggestions'] = response;
+                            console.log(data);
+                            res.render('index', data);
+                        }
+                    });
                 }
             });
         });
     }else{
+        data['friend_suggestions'] = [];
+        data['fluency_data'] = [];
+        data['language_data'] = [];
         res.render('index', data);
     }
 });
@@ -125,10 +137,10 @@ app.get('/auth/facebook/callback',
         passport.authenticate('facebook', { failureRedirect: '/login' }),
         function(req, res) {
             // Client just authenticated. Check if new.
-            console.log("callback");
             console.log(req.user);
             pg.connect(url, function(err, client, done){
                 if(err){
+                    done();
                     return console.error('could not connect to postgres', err);
                 }
                 query_str = 'SELECT id FROM \"user\" WHERE fb_id = \'' + req.user.id + '\';';
@@ -142,6 +154,7 @@ app.get('/auth/facebook/callback',
                         // New user. Run Setup.
                         pg.connect(url, function(err, client, done){
                             if(err){
+                                done();
                                 return console.error('could not connect to postgres', err);
                             }
                             query_str = 'INSERT INTO \"user\" (fb_id, name) VALUES (\'' + req.user.id + '\', \'' + req.user.name+ '\') RETURNING id;';
@@ -178,6 +191,7 @@ app.get('/api/get_language_data', function (req, res){
 
 // Data Printer
 app.get('/api/get_data', ensureAuthenticated, function (req, res){
+    console.log("Falling from get data");
     getUserData(req.user.user_id, false, function (data){
         res.send(data);
     });
@@ -187,7 +201,7 @@ app.get('/api/get_data', ensureAuthenticated, function (req, res){
 app.post('/api/add_lang', ensureAuthenticated, function (req, res){
     var user_id     = req.user.user_id,
     language    = req.body.language,
-    fluency     = req.body.fluency,
+    fluency_id     = req.body.fluency,
     known       = req.body.known;
 
 // TODO: sanitize
@@ -195,6 +209,7 @@ app.post('/api/add_lang', ensureAuthenticated, function (req, res){
 // Check existence
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
@@ -202,11 +217,12 @@ pg.connect(url, function(err, client, done){
     console.log(query_str);
     client.query(query_str, function (err, result){
         if(err){
+            done();
             res.send(500);
             return console.error('error running query', err);
         }
         if(result.rows.length == 0){
-            query_str = 'INSERT INTO user_to_language VALUES (' + user_id + ', \'' + language + '\', ' + fluency + ', \'' + known + '\');';
+            query_str = 'INSERT INTO user_to_language VALUES (' + user_id + ', \'' + language + '\', ' + fluency_id + ', \'' + known + '\');';
             console.log(query_str);
             client.query(query_str, function (err, result){
                 done();
@@ -234,6 +250,7 @@ app.post('/api/remove_lang', ensureAuthenticated, function (req, res){
 // Check existence
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
@@ -241,6 +258,7 @@ pg.connect(url, function(err, client, done){
     console.log(query_str);
     client.query(query_str, function (err, result){
         if(err){
+            done();
             res.send(500);
             return console.error('error running query', err);
         }
@@ -272,6 +290,7 @@ app.post('/api/set_skype_screename', ensureAuthenticated, function (req, res){
 
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
@@ -300,6 +319,7 @@ app.post('/api/add_friend', ensureAuthenticated, function(req, res){
 
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
@@ -307,6 +327,7 @@ pg.connect(url, function(err, client, done){
     console.log(query_str);
     client.query(query_str, function (err, result){
         if(err || result.rows.length > 0){
+            done();
             res.send(500);
             return console.error('error running query', err);
         }
@@ -330,12 +351,14 @@ app.post('/api/accept_request', ensureAuthenticated, function (req, res){
 
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
     query_str = 'UPDATE user_relationships SET status = 1 WHERE user_id = ' + peer_id + ' AND peer_id = ' + user_id + ';';
     console.log(query_str);
     client.query(query_str, function (err, result){
+        done();
         if(err){
             res.send(500);
             return console.error('error running query', err);
@@ -353,12 +376,14 @@ app.post('/api/remove_relationship', ensureAuthenticated, function(req, res){
 
 pg.connect(url, function(err, client, done){
     if(err){
+        done();
         res.send(500);
         return console.error('could not connect to postgres', err);
     }
     query_str = 'DELETE FROM user_relationships WHERE (user_id = \'' + user_id + '\' AND peer_id = \'' + peer_id + '\') OR (user_id = \'' + peer_id + '\' AND peer_id = \'' + user_id + '\');';
     console.log(query_str);
     client.query(query_str, function (err, result){
+        done();
         if(err){
             res.send(500);
             return console.error('error running query', err);
@@ -369,75 +394,102 @@ pg.connect(url, function(err, client, done){
 });
 
 // View Public Profile
-app.get('/profile', ensureAuthenticated, function(req, res){
+app.get('/api/profile', ensureAuthenticated, function(req, res){
     var peer_id = req.query.peer_id;
-    var restricted = friendshipCheck(req.user.user_id, peer_id);
-    getUserData(peer_id, restricted, function (data){
-        res.send(data);
-    });
-});
-
-// Friend Suggestions
-app.get('/api/friend_suggestions', ensureAuthenticated, function(req, res){
-    pg.connect(url, function(err, client, done){
-        if(err){
-            return console.error('could not connect to postgres', err);
-        }
-        var user_id = req.user.user_id; // Sanitize
-        client.query(matchmaking_query, [user_id], function (err, result){
-            if(err){
-                return console.error('error running query', err);
-            }
-            //return result.rows.length > 0;
-            res.send(result.rows);
+    console.log("Requesting Peer ID: " + peer_id);
+    var friendShipCheckResult = friendshipCheck(req.user.user_id, peer_id, function (response){
+        console.log("FriendShipCheckResult");
+        console.log(response);
+        var restricted = !response;
+        console.log("Restricted");
+        console.log(restricted);
+        console.log("Calling from profile");
+        getUserData(peer_id, restricted, function (data){
+            res.send(data);
         });
     });
-
 });
 
-function friendshipCheck(uid1, uid2){
+function friendSuggestions(uid, callback){
     pg.connect(url, function(err, client, done){
         if(err){
+            done();
+            callback(500);
+            return console.error('could not connect to postgres', err);
+        }
+        client.query(matchmaking_query, [uid], function (err, result){
+            done();
+            if(err){
+                callback(500);
+                return console.error('error running query', err);
+            }
+            callback(result.rows);
+        });
+    });
+}
+
+function friendshipCheck(uid1, uid2, callback){
+    if(uid1 == uid2){ 
+        callback(true);
+        return;
+    }
+    pg.connect(url, function(err, client, done){
+        if(err){
+            done();
+            callback(500);
             return console.error('could not connect to postgres', err);
         }
         query_str = 'SELECT 1 FROM user_relationships WHERE ((user_id = ' + uid1 + ' AND peer_id = ' + uid2 + ') OR (user_id = ' + uid2 + ' AND peer_id = ' + uid1 + ') AND status = 1);';
         console.log(query_str);
         client.query(query_str, function (err, result){
+            done();
             if(err){
+                callback(500);
                 return console.error('error running query', err);
             }
-            return result.rows.length > 0;
+            console.log("Friendship Check returning inequality");
+            console.log(result);
+            console.log(result.rows.length > 0);
+            callback(result.rows.length > 0);
         });
     });
 }
 
 function getUserData(uid, restricted, callback){
+    console.log("Restricted: " + restricted);
+    if(restricted === undefined) restricted = true;
     var data = {};
     pg.connect(url, function(err, client, done){
         if(err){
+            done();
             return console.error('could not connect to postgres', err);
         }
         query_str = 'SELECT id, name, screename FROM "user" WHERE id = \'' + uid + '\';';
         console.log(query_str);
         client.query(query_str, function (err, result){
             if(err){
+                done();
                 return console.error('error running query', err);
             }
             if(result.rows.length == 0){
+                done();
                 callback({});
                 return;
             }
             data['id'] = result.rows[0].id;
             data['name'] = result.rows[0].name;
-            if(!restricted){
-                data['screename'] = result.rows[0].screename;
+            data['screename'] = result.rows[0].screename;
+            if(restricted){
+                data['screename'] = null;
             }
-            console.log(data);
 
             query_str = 'SELECT language.name as language_name, language.id as language_id, fluency.name as fluency_name, fluency.id as fluency_id, known FROM user_to_language JOIN language ON (language_id=language.id) JOIN fluency ON (fluency_id=fluency.id) WHERE user_id = \'' + data['id'] + '\'';
             console.log(query_str);
+            done();
+
             client.query(query_str, function (err, result){
                 if(err){
+                    done();
                     return console.error('error running query', err);
                 }
                 var arr_k = [], arr_u = [];
@@ -454,9 +506,6 @@ function getUserData(uid, restricted, callback){
                 data['unknown_langs'] = arr_u.join(', ');
 
                 query_str = 'SELECT user_id, peer_id, status FROM user_relationships WHERE (user_id = \'' + data['id'] + '\' OR peer_id = \'' + data['id']+ '\')';
-                    if(restricted){
-                        query_str += 'AND status = 1;';
-                    }
                     console.log(query_str);
                     client.query(query_str, function (err, result){
                         done();	// Release Client
@@ -474,18 +523,22 @@ function getUserData(uid, restricted, callback){
 function getLanguageAndFluencyData(callback){
     pg.connect(url, function(err, client, done){
         if(err){
+            done();
             callback(500);
             return console.error('could not connect to postgres', err);
         }
         response_data = {};
-        query_str = 'SELECT * FROM language';
+        query_str = 'SELECT * FROM language;';
+        console.log(query_str);
         client.query(query_str, function (err, result){
             if(err){
+                done();
                 callback(500);
                 return console.error('error running query', err);
             }
             response_data['language_data'] = result.rows;
-            query_str = 'SELECT * FROM fluency';
+            query_str = 'SELECT * FROM fluency;';
+            console.log(query_str);
             client.query(query_str, function (err, result){
                 done();
                 if(err){

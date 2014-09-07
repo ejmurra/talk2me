@@ -5,14 +5,14 @@ SELECT user_id, COUNT(user_id) FROM (
 
     SELECT p.user_id FROM 
     user_to_language as p, 
-    (SELECT user_id, language_id, fluency 
+    (SELECT user_id, language_id, fluency_id 
         FROM user_to_language 
         WHERE known = FALSE AND 
         user_id = $1::int) as sub 
     WHERE 
     p.known = FALSE AND
     p.language_id = sub.language_id AND
-    p.fluency >= sub.fluency AND
+    p.fluency_id >= sub.fluency_id AND
     p.user_id != sub.user_id
 
     UNION ALL
@@ -24,7 +24,7 @@ SELECT user_id, COUNT(user_id) FROM (
 
     SELECT p.user_id FROM 
     user_to_language as p, 
-    (SELECT user_id, language_id, fluency 
+    (SELECT user_id, language_id, fluency_id 
         FROM user_to_language 
         WHERE known = TRUE AND 
         user_id = $1::int) as sub 
@@ -37,7 +37,7 @@ SELECT user_id, COUNT(user_id) FROM (
     -- You want to know it and they know it
     SELECT p.user_id FROM 
     user_to_language as p, 
-    (SELECT user_id, language_id, fluency 
+    (SELECT user_id, language_id, fluency_id 
         FROM user_to_language 
         WHERE known = FALSE AND 
         user_id = $1::int) as sub 

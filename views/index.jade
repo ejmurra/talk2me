@@ -7,11 +7,31 @@ html
     link(rel='stylesheet', type='text/css', href='css/main.css')
     link(href='http://fonts.googleapis.com/css?family=Roboto:400,700,400italic|Quattrocento:400,700', rel='stylesheet', type='text/css')
     script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script.
+      if (window.location.hash && window.location.hash === "#_=_") {
+         if (window.history && history.pushState) {
+             window.history.pushState("", document.title, window.location.pathname);
+         } else {
+         // Prevent scrolling by storing the page's current scroll offset
+             var scroll = {
+                 top: document.body.scrollTop,
+                 left: document.body.scrollLeft
+             };
+             window.location.hash = "";
+             // Restore the scroll offset, should be flicker free
+             document.body.scrollTop = scroll.top;
+             document.body.scrollLeft = scroll.left;
+         }
+       }
   body
     ul.menu
       li.infobox Home
       li#swapover.profile Profile
       li.finder Find a partner
+    section.containerOne
+      h1.title Talk2Me
+      .viewer
+        img.peeps(src='peeps.png')
     .container
       #infobox.infobox
         h1 Why should you use our shit?
@@ -30,19 +50,18 @@ html
             #skype.skypeInfo
               a(href="skype:#{screename}?call")
                 .putter
-                  img.skypeIcon(src='skype.png') 
+                  img.skypeIcon(src='skype.png')
                   | #{screename}
-            #profiler.profiler
-              ul.name
-                li #{name}
-              ul.knowit
-                li #{known_langs}
-              ul.learning
-                li #{unknown_langs}
-            ul.progres
-              h3 Learning level
-              li.progress
-                span.meter(style='width: 60%') &nbsp;
+            table#profiler.endUser
+              th.name Name
+              th.knowit Known
+              th.learning Learning
+              th.progress Knowledge level
+              tr
+                td #{name}
+                td #{known_langs} 
+                td #{unknown_langs} 
+                td Beginner
           #editor
             form
               div.info
@@ -83,42 +102,100 @@ html
                     span(id= lang_entry.fluency_id).years #{lang_entry.fluency_name}
                     div#pull2
                       span.minus
-      .finder
+      .finder(id= id)
         .shell
-          ul.person
-            h1.daName Jack
-            .addFriend Add Friend
-            .someSpace &nbsp;
-            ul
-              ul.first
-                h3 Knows
-                li.langKnow spanlish
-              ul.second
-                h3 Level
-                li.levelKnow expert
-            ul
-              ul.third
-                h3 Learning
-                li.langLearn Portueguese
-              ul.fourth
-                h3 Level
-                li.levelLearn Beginner
-          ul.person
-            h1.daName Jack
-            .addFriend Add Friend
-            .someSpace &nbsp;
-            ul
-              ul.first
-                h3 Knows
-                li.langKnow spanlish
-              ul.second
-                h3 Level
-                li.levelKnow expert
-            ul
-              ul.third
-                h3 Learning
-                li.langLearn Portueguese
-              ul.fourth
-                h3 Level
-                li.levelLearn Beginner
+          each peer in friend_suggestions
+            ul(id= peer.user_id).person
+              h1.daName Placeholder
+              .addFriend Add Friend
+              .someSpace &nbsp;
+              ul
+                ul.first
+                  h3 Knows
+                  li.langKnow -- 
+                ul.second
+                  h3 Level
+                  li.levelKnow -- 
+              ul
+                ul.third
+                  h3 Learning
+                  li.langLearn -- 
+                ul.fourth
+                  h3 Level
+                  li.levelLearn -- 
+              script.
+                $.get("/api/profile?peer_id=#{peer.user_id}", function (data){
+                    var client_id = $('div.finder')[0].id;
+                    console.log(data);
+                    $('ul##{peer.user_id} h1.daName').text(data.name);
+                    $('ul##{peer.user_id} li.langKnow').text(data.know_langs);
+                    $('ul##{peer.user_id} li.langLearn').text(data.unknown_langs);
+
+                    var addFriendText = 'Add Friend';
+                    if(data.relationships !== undefined 
+                        && data.relationships.length > 0){
+                        console.log("First");
+                        for(var i = 0; i < data.relationships.length; ++i){
+                            console.log("Second");
+                            var rel = data.relationships[i];
+                            console.log(rel);
+                            console.log(rel.user_id);
+                            console.log(client_id);
+                            if(rel.user_id != client_id && rel.peer_id != client_id){
+                                continue;
+                            }
+                            console.log("Past continue");
+                            if(rel.user_id == client_id){ 
+                                console.log("Third");
+                                if(rel.status == 1){
+                                    // Already friends
+                                    addFriendText = 'Already Friends';
+                                    i = data.relationships.length;
+                                }else{
+                                    // client already requested this person
+                                    addFriendText = 'Request Pending';
+                                    i = data.relationships.length;
+                                }
+                            }else if(rel.peer_id == client_id){
+                                console.log("Fourth");
+                                if(rel.status == 1){
+                                    // Already Friends!
+                                    addFriendText = 'Already Friends';
+                                    i = data.relationships.length;
+                                }else{
+                                    //This person already requested you
+                                    addFriendText = 'Click to Approve';
+                                    i = data.relationships.length;
+                                }
+                            }
+                        }
+                    } 
+                    console.log(addFriendText);
+                    $('ul##{peer.user_id} div.addFriend').text(addFriendText);
+
+                    if(addFriendText == 'Click to Approve' || addFriendText == 'Add Friend'){
+                        $('ul##{peer.user_id}.person div.addFriend').on('click', function (e) {
+                            if(addFriendText == 'Click to Approve'){
+                                $.post("/api/accept_request", 
+                                    {peer_id:'#{peer.user_id}'}, 
+                                    function (data){
+                                        console.log(data == 'OK');
+                                        if(data == 200){
+                                            $('ul##{peer.user_id}.person div.addFriend').text("OK!");
+                                        } 
+                                    });
+
+                            }else if(addFriendText == 'Add Friend'){
+                                $.post("/api/add_friend", 
+                                    {peer_id:'#{peer.user_id}'}, 
+                                    function (data){
+                                        if(data == 'OK'){
+                                            $('ul##{peer.user_id}.person div.addFriend').text("OK!");
+                                        }
+                                    });
+                            }
+
+                        });
+                    }
+                });
     script(src='js/main.js')
