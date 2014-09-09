@@ -59,6 +59,7 @@ SELECT user_id, COUNT(user_id) FROM (
     p.known = FALSE AND
     p.language_id = sub.language_id AND
     p.user_id != sub.user_id
+
 ) as t
 GROUP BY user_id
 ORDER BY count DESC

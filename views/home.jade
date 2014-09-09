@@ -1,53 +1,36 @@
+doctype html
 html
-    head
-        title Talk 2 Me
-        script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js")
-        //link(rel='stylesheet' type='text/css' href='css/main.css')
-        link(rel='stylesheet' type='text/css' href='css/main2.css')
-        script(src="js/main2.js")
-    body
-        ul
-            a#infobox(href="#") Home
-            a#profile(href="#") Profile
-            a#finder(href="#") Find a Partner
-        h1.profile Your Profile
-        button#edit_button edit
-        div#editing_pane
-            div#known.listing.center_listing
-                h3 Known Languages:
-                select#language
-                    option
-                    option English
-                    option Spanish
-                    option French
-                select#fluency
-                    option
-                    option Less than one year
-                    option One to three years
-                    option More than three years
-                button#add add
-            div#learn.listing.center_listing
-                h3 Want to learn:
-                select
-                    option
-                    option English
-                    option Spanish
-                    option French
-                button#add add
-        hr
-        // Listing
-        div.listing_container
-            div#left.listing
-                div.clear
-                    span one
-                    span two
-                    div.delete delete 
-                div.clear
-                    span four 
-                    span five 
-                    div.delete delete 
-            div#right.listing
-                div.clear
-                    span one
-                    div.delete delete
-
+  head
+    title Talk 2 Me
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel='stylesheet', type='text/css', href='css/main.css')
+    link(href='http://fonts.googleapis.com/css?family=Roboto:400,700,400italic|Quattrocento:400,700', rel='stylesheet', type='text/css')
+    script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+  body
+    ul.menu
+      li.infobox 
+        a(href="/") Home
+      li#swapover.profile 
+        a(href="/profile") Profile
+      li#myAss.finder 
+        a(href="/finder") Find a partner
+    section.containerOne
+      h1.title Talk2Me
+      .viewer
+        .infoBox
+          h1.title Learning a new language is hard
+          .boxy
+            ul.this Thankfully, we can help!
+            li.noteL
+              | Language learning can be tough, because many of us don&apos;t get to practice speaking with native speakers
+            li.noteC
+              | Talk2Me lets you connect with native speakers and other learners to immerse yourself in your target language
+            li.noteR All it takes is a Skype account and a Facebook account to get started
+        img.peeps(src='peeps.png')
+      .hider &nbsp;
+    .container
+      #infobox.infobox
+        a.dirt(href='/auth/facebook')
+          i#fasobook.fa.fa-facebook-square
+    script(src='js/main.js')

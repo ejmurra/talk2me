@@ -63,7 +63,7 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new FacebookStrategy({
     clientID: FACEBOOK_APP_ID,
     clientSecret: FACEBOOK_APP_SECRET,
-    callbackURL: "http://35.2.123.66:3000/auth/facebook/callback",
+    callbackURL: "http://35.2.112.239:3000/auth/facebook/callback",
     profileFields: ['id', 'displayName', 'photos']
 },
 function(accessToken, refreshToken, profile, done) {
@@ -84,46 +84,20 @@ app.set('view engine', 'jade');
 app.use(express.static(path.resolve('./public')));
 
 app.get('/', function(req, res){
-    console.log(req.user);
-    var data = {authenticated: req.isAuthenticated()};
-    if(data['authenticated']){
-        console.log("Calling from root");
-        getUserData(req.user.user_id, false, function (data) {
-            data['authenticated'] = true;
-            getLanguageAndFluencyData(function(response){
-                if(response == 500){
-                    res.send(response);
-                }else{
-                    data['language_data'] = response.language_data;
-                    data['fluency_data'] = response.fluency_data;
-
-                    friendSuggestions(req.user.user_id, function(response){
-                        if(response == 500){
-                            res.send(response);
-                        }else{
-                            data['friend_suggestions'] = response;
-                            console.log(data);
-                            res.render('index', data);
-                        }
-                    });
-                }
-            });
-        });
-    }else{
-        data['friend_suggestions'] = [];
-        data['fluency_data'] = [];
-        data['language_data'] = [];
-        res.render('index', data);
-    }
+    res.render('home');
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
-    // Pull data
-    res.render('account', { user: req.user });
-});
+app.get('/finder', ensureAuthenticated, function(req, res){
+    var uid = req.user.user_id;
+    var data = {};
+    friendSuggestions(uid, function (response){
+        console.log(response);
+        console.log("First");
+        data['friend_suggestions'] = response;
 
-app.get('/login', function(req, res){
-    res.render('login', { user: req.user });
+        console.log(data);
+        res.render('finder', data);
+    });
 });
 
 app.get('/auth/facebook',
@@ -134,7 +108,7 @@ app.get('/auth/facebook',
         });
 
 app.get('/auth/facebook/callback', 
-        passport.authenticate('facebook', { failureRedirect: '/login' }),
+        passport.authenticate('facebook', { failureRedirect: '/' }),
         function(req, res) {
             // Client just authenticated. Check if new.
             console.log(req.user);
@@ -176,6 +150,29 @@ app.get('/auth/facebook/callback',
                 });
             });
         });
+
+app.get('/profile', ensureAuthenticated, function(req, res){
+    var peer_id = req.query.peer_id;
+    if(peer_id === undefined){
+        console.log(req.user);
+        peer_id = req.user.user_id;
+    }
+    console.log(peer_id)
+    console.log(req.user.user_id);
+    console.log("Requesting Peer ID: " + peer_id);
+    friendshipCheck(req.user.user_id, peer_id, function (response){
+        var restricted = !response;
+        getUserData(peer_id, restricted, function (data){
+            getLanguageAndFluencyData(function(response) {
+                console.log(response);
+                data['language_data'] = response.language_data;
+                data['fluency_data'] = response.fluency_data;
+                console.log(data);
+                res.render('profile', data);
+            });
+        });
+    });
+});
 
 app.get('/logout', function(req, res){
     req.logout();
@@ -244,6 +241,7 @@ pg.connect(url, function(err, client, done){
 app.post('/api/remove_lang', ensureAuthenticated, function (req, res){
     var user_id     = req.user.user_id,
     language    = req.body.language;
+    console.log("RM_lang called from: " + user_id);
 
 // TODO: sanitize
 
@@ -263,7 +261,7 @@ pg.connect(url, function(err, client, done){
             return console.error('error running query', err);
         }
         if(result.rows.length == 1){
-            query_str = 'DELETE FROM user_to_language WHERE language_id = \'' + language + '\';';
+            query_str = 'DELETE FROM user_to_language WHERE user_id = \'' + user_id + '\' AND language_id = \'' + language + '\';';
             console.log(query_str);
             client.query(query_str, function (err, result){
                 done();
@@ -396,6 +394,10 @@ pg.connect(url, function(err, client, done){
 // View Public Profile
 app.get('/api/profile', ensureAuthenticated, function(req, res){
     var peer_id = req.query.peer_id;
+    if(peer_id === undefined){
+        res.send(500);
+        return;
+    }
     console.log("Requesting Peer ID: " + peer_id);
     var friendShipCheckResult = friendshipCheck(req.user.user_id, peer_id, function (response){
         console.log("FriendShipCheckResult");
@@ -417,12 +419,15 @@ function friendSuggestions(uid, callback){
             callback(500);
             return console.error('could not connect to postgres', err);
         }
+        console.log(matchmaking_query);
         client.query(matchmaking_query, [uid], function (err, result){
             done();
             if(err){
                 callback(500);
                 return console.error('error running query', err);
             }
+            console.log(result);
+            console.log('calling back');
             callback(result.rows);
         });
     });
@@ -540,12 +545,15 @@ function getLanguageAndFluencyData(callback){
             query_str = 'SELECT * FROM fluency;';
             console.log(query_str);
             client.query(query_str, function (err, result){
+                console.log("made query");
                 done();
                 if(err){
                     callback(500);
                     return console.error('error running query', err);
                 }
                 response_data['fluency_data'] = result.rows;
+                console.log("calling back");
+                console.log(response_data);
                 callback(response_data);
             });
         });
@@ -554,7 +562,7 @@ function getLanguageAndFluencyData(callback){
 
 function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) { return next(); }
-    res.redirect('/login')
+    res.redirect('/')
 }
 
 

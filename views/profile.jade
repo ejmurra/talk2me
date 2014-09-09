@@ -1,0 +1,118 @@
+doctype html
+html
+  head
+    title Talk 2 Me
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel='stylesheet', type='text/css', href='css/main.css')
+    link(href='http://fonts.googleapis.com/css?family=Roboto:400,700,400italic|Quattrocento:400,700', rel='stylesheet', type='text/css')
+    script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script.
+      if (window.location.hash && window.location.hash === "#_=_") {
+         if (window.history && history.pushState) {
+             window.history.pushState("", document.title, window.location.pathname);
+         } else {
+         // Prevent scrolling by storing the page's current scroll offset
+             var scroll = {
+                 top: document.body.scrollTop,
+                 left: document.body.scrollLeft
+             };
+             window.location.hash = "";
+             // Restore the scroll offset, should be flicker free
+             document.body.scrollTop = scroll.top;
+             document.body.scrollLeft = scroll.left;
+         }
+       }
+  body
+    ul.menu
+      li.infobox 
+        a(href="/") Home
+      li#swapover.profile 
+        a(href="/profile") Profile
+      li#myAss.finder 
+        a(href="/finder") Find a partner
+    section.containerOne
+      h1.title Talk2Me
+      .viewer
+        .infoBox
+          h1.title Learning a new language is hard
+          .boxy
+            ul.this Thankfully, we can help!
+            li.noteL
+              | Language learning can be tough, because many of us don&apos;t get to practice speaking with native speakers
+            li.noteC
+              | Talk2Me lets you connect with native speakers and other learners to immerse yourself in your target language
+            li.noteR All it takes is a Skype account and a Facebook account to get started
+        img.peeps(src='peeps.png')
+      .hider &nbsp;
+    .container
+      #infobox.infobox
+      .profile
+        .spacer &nbsp;
+        #user.user
+          h1.noClear #{name}'s profile
+          #{screename}
+          #skype.skypeInfo
+            if screename
+                a(href="skype:#{screename}?call")
+                  .putter
+                    img.skypeIcon(src='skype.png')
+                    | #{screename}
+            else
+              if !public
+                a(href="javascript:$.post('/api/set_skype_screename', {screename: prompt('Enter Skype Screen Name')}).done(function(){location.reload()});")
+                  .putter
+                    img.skypeIcon(src='skype.png')
+                    | Click to Set Skype Screename
+          table#profiler.endUser
+            th.name Name
+            th.knowit Known
+            th.learning Learning
+            th.progress Knowledge level
+            tr
+              td #{name}
+              td #{known_langs} 
+              td #{unknown_langs} 
+              td Beginner
+        if !public
+            #editor
+              form
+                div.info
+                  h3 Known languages:
+                  select#language_known.dropdown
+                    option
+                    each val in language_data
+                      option(id= val.id) #{val.name} 
+                  select#fluency_known.dropdown
+                    option
+                    each val in fluency_data
+                      option(id= val.id) #{val.name}
+                  span#add1.plus &nbsp;
+                .info
+                  h3 Want to learn:
+                  select#language_learn.dropdown
+                    option
+                    each val in language_data
+                      option(id= val.id) #{val.name} 
+                  select#fluency_learn.dropdown
+                    option
+                    each val in fluency_data
+                      option(id= val.id) #{val.name}
+                  span#add2.plus &nbsp;
+              #selectL.selected
+                each lang_entry in languages
+                  if lang_entry.known
+                    div
+                      span(id= lang_entry.language_id).known #{lang_entry.language_name}
+                      span(id= lang_entry.fluency).years #{lang_entry.fluency_name}
+                      div#pull1
+                        span.minus
+              #selectR.selected
+                each lang_entry in languages
+                  if !lang_entry.known
+                    div
+                      span(id= lang_entry.language_id).known #{lang_entry.language_name}
+                      span(id= lang_entry.fluency_id).years #{lang_entry.fluency_name}
+                      div#pull2
+                        span.minus
+    script(src='js/main.js')

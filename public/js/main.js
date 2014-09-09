@@ -1,9 +1,4 @@
 $( document ).ready(function() {
-    $('#infobox').show().siblings().hide();
-
-    $('.menu>li').on('click',function(menu){
-        $('.container>.'+ menu.target.classList[0]).show().siblings().hide();
-    });
 
     $('#add1').on('click',function(jax){
         var lang_name = $('.dropdown#language_known option:selected').text(),

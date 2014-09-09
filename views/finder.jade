@@ -1,0 +1,135 @@
+doctype html
+html
+  head
+    title Talk 2 Me
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel='stylesheet', type='text/css', href='css/main.css')
+    link(href='http://fonts.googleapis.com/css?family=Roboto:400,700,400italic|Quattrocento:400,700', rel='stylesheet', type='text/css')
+    script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script.
+      if (window.location.hash && window.location.hash === "#_=_") {
+         if (window.history && history.pushState) {
+             window.history.pushState("", document.title, window.location.pathname);
+         } else {
+         // Prevent scrolling by storing the page's current scroll offset
+             var scroll = {
+                 top: document.body.scrollTop,
+                 left: document.body.scrollLeft
+             };
+             window.location.hash = "";
+             // Restore the scroll offset, should be flicker free
+             document.body.scrollTop = scroll.top;
+             document.body.scrollLeft = scroll.left;
+         }
+       }
+  body
+    ul.menu
+      li.infobox 
+        a(href="/") Home
+      li#swapover.profile 
+        a(href="/profile") Profile
+      li#myAss.finder 
+        a(href="/finder") Find a partner
+    section.containerOne
+      h1.title Talk2Me
+      .viewer
+        .infoBox
+          h1.title Learning a new language is hard
+          .boxy
+            ul.this Thankfully, we can help!
+            li.noteL
+              | Language learning can be tough, because many of us don&apos;t get to practice speaking with native speakers
+            li.noteC
+              | Talk2Me lets you connect with native speakers and other learners to immerse yourself in your target language
+            li.noteR All it takes is a Skype account and a Facebook account to get started
+        img.peeps(src='peeps.png')
+      .hider &nbsp;
+    .container
+      #myAss.finder
+        table(id= id).person
+          th.someName Name
+          th.el1 Learning Language
+          th.adder Add Friend
+          each peer in friend_suggestions
+            tr(id= peer.user_id)
+              td.name
+                a(href="/profile?peer_id=#{peer.user_id}")
+              td.learning_lang
+              td#addFriend
+                button add
+              script.
+                $.get("/api/profile?peer_id=#{peer.user_id}", function (data){
+                    var client_id = $('table.person')[0].id;
+                    $('tr##{peer.user_id} td.name a').text(data.name);
+                    $('tr##{peer.user_id} td.learning_lang').text(data.unknown_langs);
+
+                    var addFriendText = 'Add Friend';
+                    if(data.relationships !== undefined 
+                        && data.relationships.length > 0){
+                        console.log("First");
+                        for(var i = 0; i < data.relationships.length; ++i){
+                            console.log("Second");
+                            var rel = data.relationships[i];
+                            console.log(rel);
+                            console.log(rel.user_id);
+                            console.log(client_id);
+                            if(rel.user_id != client_id && rel.peer_id != client_id){
+                                continue;
+                            }
+                            console.log("Past continue");
+                            if(rel.user_id == client_id){ 
+                                console.log("Third");
+                                if(rel.status == 1){
+                                    // Already friends
+                                    addFriendText = 'Already Friends';
+                                    i = data.relationships.length;
+                                }else{
+                                    // client already requested this person
+                                    addFriendText = 'Request Pending';
+                                    i = data.relationships.length;
+                                }
+                            }else if(rel.peer_id == client_id){
+                                console.log("Fourth");
+                                if(rel.status == 1){
+                                    // Already Friends!
+                                    addFriendText = 'Already Friends';
+                                    i = data.relationships.length;
+                                }else{
+                                    //This person already requested you
+                                    addFriendText = 'Click to Approve';
+                                    i = data.relationships.length;
+                                }
+                            }
+                        }
+                    } 
+                    console.log(addFriendText);
+                    console.log($('tr##{peer.user_id} td#addFriend button'));
+                    $('tr##{peer.user_id} td#addFriend button').text(addFriendText);
+
+                    if(addFriendText == 'Click to Approve' || addFriendText == 'Add Friend'){
+                        $('tr##{peer.user_id} td#addFriend button').on('click', function (e) {
+                            if(addFriendText == 'Click to Approve'){
+                                $.post("/api/accept_request", 
+                                    {peer_id:'#{peer.user_id}'}, 
+                                    function (data){
+                                        console.log(data == 'OK');
+                                        if(data == 200){
+                                            $('tr##{peer.user_id}.person td#addFriend button').text("OK!");
+                                        } 
+                                    });
+
+                            }else if(addFriendText == 'Add Friend'){
+                                $.post("/api/add_friend", 
+                                    {peer_id:'#{peer.user_id}'}, 
+                                    function (data){
+                                        if(data == 'OK'){
+                                            $('tr##{peer.user_id}.person td#addFriend button').text("OK!");
+                                        }
+                                    });
+                            }
+
+                        });
+                    }
+                });
+    script(src='js/main.js')
